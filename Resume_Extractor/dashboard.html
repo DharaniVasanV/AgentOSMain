@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Resume Extractor — AI Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    /* ── Reset & Base ─────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:        #0d1117;
+      --surface:   #161b22;
+      --surface2:  #1c2230;
+      --border:    #2a3447;
+      --accent:    #6c63ff;
+      --accent2:   #a78bfa;
+      --green:     #22d3a6;
+      --red:       #f87171;
+      --yellow:    #fbbf24;
+      --text:      #e2e8f0;
+      --muted:     #94a3b8;
+      --radius:    14px;
+      --shadow:    0 4px 24px rgba(0,0,0,.45);
+    }
+    html { font-family: 'Inter', sans-serif; font-size: 14px; }
+    body { background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+
+    /* ── Header ────────────────────────────────────────────────── */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 28px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.1rem; }
+    .logo-icon {
+      width: 32px; height: 32px; border-radius: 8px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+    }
+    .header-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+    .search-bar {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 9px; padding: 6px 14px; width: 260px;
+    }
+    .search-bar input {
+      background: none; border: none; outline: none; color: var(--text);
+      font-family: inherit; font-size: .875rem; width: 100%;
+    }
+    .search-bar input::placeholder { color: var(--muted); }
+
+    /* ── Stats Bar ─────────────────────────────────────────────── */
+    .stats-bar {
+      display: flex; gap: 12px; padding: 16px 28px;
+      background: var(--surface); border-bottom: 1px solid var(--border);
+    }
+    .stat-chip {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 9px; padding: 8px 14px; gap: 10px;
+    }
+    .stat-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .stat-label { color: var(--muted); font-size: .8rem; }
+    .stat-val { font-weight: 700; font-size: .95rem; }
+
+    /* ── Main Layout ───────────────────────────────────────────── */
+    .main { display: flex; gap: 0; flex: 1; }
+
+    /* ── Sidebar Tabs ──────────────────────────────────────────── */
+    .sidebar {
+      width: 220px; background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 20px 12px;
+      display: flex; flex-direction: column; gap: 6px;
+      position: sticky; top: 60px; height: calc(100vh - 60px); overflow-y: auto;
+    }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 14px; border-radius: 9px;
+      cursor: pointer; font-weight: 500; color: var(--muted);
+      transition: all .2s; border: none; background: none; width: 100%; text-align: left;
+    }
+    .nav-item:hover { background: var(--surface2); color: var(--text); }
+    .nav-item.active { background: rgba(108,99,255,.15); color: var(--accent2); }
+    .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+
+    /* ── Content ───────────────────────────────────────────────── */
+    .content { flex: 1; padding: 24px 28px; overflow-y: auto; }
+
+    /* ── Section Titles ────────────────────────────────────────── */
+    .section { display: none; }
+    .section.active { display: block; }
+    .section-title { font-size: 1.25rem; font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+    .section-title span { font-size: 1.3rem; }
+
+    /* ── Upload Card ───────────────────────────────────────────── */
+    .upload-zone {
+      border: 2px dashed var(--border); border-radius: var(--radius);
+      padding: 52px 24px; text-align: center; cursor: pointer;
+      transition: all .25s; background: var(--surface);
+      position: relative;
+    }
+    .upload-zone:hover, .upload-zone.drag-over {
+      border-color: var(--accent); background: rgba(108,99,255,.07);
+    }
+    .upload-icon { font-size: 3rem; margin-bottom: 12px; }
+    .upload-zone h3 { font-size: 1.05rem; font-weight: 600; margin-bottom: 6px; }
+    .upload-zone p { color: var(--muted); font-size: .85rem; margin-bottom: 20px; }
+    .upload-zone input[type=file] { display: none; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 22px; border-radius: 9px; font-family: inherit;
+      font-size: .875rem; font-weight: 600; cursor: pointer; border: none;
+      transition: all .2s;
+    }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: #574fd6; transform: translateY(-1px); }
+    .btn-danger { background: rgba(248,113,113,.15); color: var(--red); border: 1px solid rgba(248,113,113,.3); }
+    .btn-danger:hover { background: rgba(248,113,113,.25); }
+    .btn-ghost { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+    .btn-ghost:hover { background: var(--border); }
+    .btn-sm { padding: 6px 14px; font-size: .78rem; }
+    .btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+    .upload-badge {
+      display: inline-flex; gap: 6px; flex-wrap: wrap; justify-content: center; margin-top: 12px;
+    }
+    .badge {
+      font-size: .7rem; padding: 3px 8px; border-radius: 5px; font-weight: 600;
+      background: var(--surface2); border: 1px solid var(--border); color: var(--muted);
+    }
+
+    /* ── Progress ────────────────────────────────────────────── */
+    .progress-bar-wrap { margin-top: 18px; display: none; }
+    .progress-bar-wrap.visible { display: block; }
+    .progress-bar { height: 6px; background: var(--border); border-radius: 4px; overflow: hidden; }
+    .progress-fill {
+      height: 100%; width: 0%;
+      background: linear-gradient(90deg, var(--accent), var(--green));
+      border-radius: 4px; transition: width .4s ease;
+    }
+    .progress-label { font-size: .8rem; color: var(--muted); margin-bottom: 6px; }
+
+    /* ── Toast ────────────────────────────────────────────────── */
+    #toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+    .toast {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-left: 4px solid var(--accent);
+      border-radius: 10px; padding: 12px 18px; min-width: 260px;
+      box-shadow: var(--shadow); font-size: .85rem;
+      animation: slideIn .3s ease;
+    }
+    .toast.success { border-left-color: var(--green); }
+    .toast.error { border-left-color: var(--red); }
+    .toast.warning { border-left-color: var(--yellow); }
+    .toast-title { font-weight: 600; margin-bottom: 2px; }
+    .toast-msg { color: var(--muted); font-size: .8rem; }
+    @keyframes slideIn { from { opacity: 0; transform: translateX(30px); } to { opacity: 1; transform: translateX(0); } }
+
+    /* ── Candidate Cards Grid ─────────────────────────────────── */
+    .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 20px;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .card:hover { border-color: var(--accent); box-shadow: 0 0 0 1px rgba(108,99,255,.3), var(--shadow); }
+    .card-header { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+    .avatar {
+      width: 44px; height: 44px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 1rem; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+    }
+    .candidate-name { font-weight: 700; font-size: 1rem; }
+    .candidate-sub { color: var(--muted); font-size: .78rem; margin-top: 2px; }
+    .card-meta { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; }
+    .meta-row { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: .8rem; }
+    .meta-icon { font-size: .85rem; width: 16px; text-align: center; }
+    .skills-wrap { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+    .skill-chip {
+      font-size: .7rem; padding: 3px 9px; border-radius: 6px; font-weight: 600;
+      background: rgba(108,99,255,.15); color: var(--accent2);
+      border: 1px solid rgba(108,99,255,.25);
+    }
+    .skill-chip.more { background: var(--surface2); color: var(--muted); border-color: var(--border); }
+    .card-footer { display: flex; gap: 8px; align-items: center; }
+    .id-badge { margin-left: auto; font-size: .72rem; color: var(--muted); }
+
+    /* ── Detail Panel ─────────────────────────────────────────── */
+    .detail-panel {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 24px;
+    }
+    .detail-panel.hidden { display: none; }
+    .detail-header { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+    .detail-avatar {
+      width: 60px; height: 60px; border-radius: 16px;
+      background: linear-gradient(135deg, var(--accent), var(--green));
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 1.4rem;
+    }
+    .detail-name { font-size: 1.4rem; font-weight: 800; }
+    .detail-sub { color: var(--muted); font-size: .85rem; margin-top: 4px; }
+    .detail-tabs { display: flex; gap: 4px; margin-bottom: 20px; }
+    .dtab {
+      padding: 7px 16px; border-radius: 8px; cursor: pointer; font-size: .82rem; font-weight: 600;
+      color: var(--muted); background: none; border: none; transition: all .2s;
+    }
+    .dtab:hover { background: var(--surface2); color: var(--text); }
+    .dtab.active { background: rgba(108,99,255,.15); color: var(--accent2); }
+    .dtab-content { display: none; }
+    .dtab-content.active { display: block; }
+
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .info-item label { font-size: .72rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+    .info-item p { font-size: .88rem; margin-top: 3px; font-weight: 500; word-break: break-word; }
+    .summary-box { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 14px; font-size: .85rem; line-height: 1.7; color: var(--text); margin-bottom: 16px; }
+
+    .timeline { display: flex; flex-direction: column; gap: 14px; }
+    .tl-item { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+    .tl-title { font-weight: 700; font-size: .9rem; }
+    .tl-sub { color: var(--muted); font-size: .8rem; margin-top: 3px; }
+    .tl-date { font-size: .75rem; color: var(--accent2); font-weight: 600; margin-top: 6px; margin-bottom: 6px; }
+    .tl-desc { font-size: .82rem; color: var(--muted); line-height: 1.6; }
+
+    .skills-full { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+
+    /* ── Search Bar ────────────────────────────────────────────── */
+    .search-section { display: flex; gap: 10px; margin-bottom: 20px; }
+    .search-section input {
+      flex: 1; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 9px; padding: 9px 14px; color: var(--text);
+      font-family: inherit; font-size: .875rem; outline: none;
+    }
+    .search-section input:focus { border-color: var(--accent); }
+    .search-section select {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 9px; padding: 9px 12px; color: var(--text);
+      font-family: inherit; font-size: .875rem; outline: none; cursor: pointer;
+    }
+
+    /* ── Empty State ─────────────────────────────────────────── */
+    .empty-state { text-align: center; padding: 60px 24px; color: var(--muted); }
+    .empty-state .empty-icon { font-size: 3rem; margin-bottom: 12px; }
+    .empty-state p { font-size: .9rem; }
+
+    /* ── Spinner ────────────────────────────────────────────── */
+    .spinner {
+      width: 20px; height: 20px; border: 2px solid rgba(255,255,255,.2);
+      border-top-color: #fff; border-radius: 50%;
+      animation: spin .7s linear infinite; display: inline-block;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Raw Text Modal ───────────────────────────────────────── */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.7); z-index: 200;
+      display: flex; align-items: center; justify-content: center;
+      animation: fadeIn .2s ease;
+    }
+    .modal-overlay.hidden { display: none; }
+    .modal {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 24px; width: 680px; max-width: 95vw;
+      max-height: 85vh; display: flex; flex-direction: column; box-shadow: var(--shadow);
+    }
+    .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .modal-title { font-weight: 700; font-size: 1rem; }
+    .raw-text { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 14px; font-family: 'Courier New', monospace; font-size: .78rem; line-height: 1.7; overflow-y: auto; flex: 1; white-space: pre-wrap; color: var(--muted); }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    /* ── Scrollbar ────────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* ── Link ─────────────────────────────────────────────────── */
+    a { color: var(--accent2); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+<!-- ═══ HEADER ═══════════════════════════════════════════════════ -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">🤖</div>
+    Resume Extractor AI
+  </div>
+  <div class="header-right">
+    <div class="search-bar">
+      <span>🔍</span>
+      <input id="header-search" type="text" placeholder="Search candidates…" />
+    </div>
+    <button class="btn btn-primary" onclick="showSection('upload')">+ Upload Resume</button>
+  </div>
+</header>
+
+<!-- ═══ STATS BAR ════════════════════════════════════════════════ -->
+<div class="stats-bar">
+  <div class="stat-chip">
+    <div class="stat-dot" style="background:var(--green)"></div>
+    <span class="stat-label">Total Candidates</span>
+    <span class="stat-val" id="stat-total">—</span>
+  </div>
+  <div class="stat-chip">
+    <div class="stat-dot" style="background:var(--accent2)"></div>
+    <span class="stat-label">Last Uploaded</span>
+    <span class="stat-val" id="stat-last">—</span>
+  </div>
+  <div class="stat-chip">
+    <div class="stat-dot" style="background:var(--yellow)"></div>
+    <span class="stat-label">API Status</span>
+    <span class="stat-val" id="stat-status">—</span>
+  </div>
+</div>
+
+<!-- ═══ MAIN ══════════════════════════════════════════════════════ -->
+<div class="main">
+
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <button class="nav-item active" id="nav-upload" onclick="showSection('upload')">
+      <span class="nav-icon">📤</span> Upload
+    </button>
+    <button class="nav-item" id="nav-candidates" onclick="showSection('candidates')">
+      <span class="nav-icon">👥</span> Candidates
+    </button>
+    <button class="nav-item" id="nav-search" onclick="showSection('search')">
+      <span class="nav-icon">🔎</span> Search
+    </button>
+    <button class="nav-item" id="nav-extract" onclick="showSection('extract')">
+      <span class="nav-icon">📄</span> Test Extraction
+    </button>
+  </nav>
+
+  <!-- Content -->
+  <div class="content">
+
+    <!-- ── UPLOAD ──────────────────────────────────────────────── -->
+    <section class="section active" id="section-upload">
+      <div class="section-title"><span>📤</span> Upload Resume</div>
+      <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()">
+        <div class="upload-icon">📂</div>
+        <h3>Drag & Drop your Resume here</h3>
+        <p>or click to browse files</p>
+        <button class="btn btn-primary" onclick="event.stopPropagation(); document.getElementById('file-input').click()">
+          Choose File
+        </button>
+        <div class="upload-badge">
+          <span class="badge">PDF</span>
+          <span class="badge">DOCX</span>
+          <span class="badge">TXT</span>
+          <span class="badge">PNG</span>
+          <span class="badge">JPG</span>
+        </div>
+        <input type="file" id="file-input" accept=".pdf,.docx,.doc,.txt,.png,.jpg,.jpeg" onchange="handleFileSelect(this)" />
+      </div>
+      <div class="progress-bar-wrap" id="upload-progress">
+        <div class="progress-label" id="progress-label">Uploading & Extracting…</div>
+        <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+      </div>
+    </section>
+
+    <!-- ── CANDIDATES ──────────────────────────────────────────── -->
+    <section class="section" id="section-candidates">
+      <div class="section-title" style="justify-content:space-between">
+        <div style="display:flex;align-items:center;gap:10px"><span>👥</span> All Candidates</div>
+        <button class="btn btn-ghost btn-sm" onclick="loadResumes()">↻ Refresh</button>
+      </div>
+      <div id="candidates-list" class="cards-grid">
+        <div class="empty-state">
+          <div class="empty-icon">🔄</div>
+          <p>Loading candidates…</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── SEARCH ──────────────────────────────────────────────── -->
+    <section class="section" id="section-search">
+      <div class="section-title"><span>🔎</span> Search Candidates</div>
+      <div class="search-section">
+        <input type="text" id="search-q" placeholder="Search by name, email, location, summary…" />
+        <input type="text" id="search-skill" placeholder="Filter by skill (e.g. Python)" style="max-width:200px" />
+        <button class="btn btn-primary" onclick="doSearch()">Search</button>
+      </div>
+      <div id="search-results" class="cards-grid">
+        <div class="empty-state">
+          <div class="empty-icon">🔍</div>
+          <p>Enter a keyword or skill to search candidates.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── EXTRACT TEXT ─────────────────────────────────────────── -->
+    <section class="section" id="section-extract">
+      <div class="section-title"><span>📄</span> Test Text Extraction</div>
+      <div class="upload-zone" id="extract-zone" onclick="document.getElementById('extract-input').click()">
+        <div class="upload-icon">🔬</div>
+        <h3>Upload a document to inspect extracted text</h3>
+        <p>No AI processing — raw text output only</p>
+        <button class="btn btn-ghost" onclick="event.stopPropagation(); document.getElementById('extract-input').click()">
+          Choose File
+        </button>
+        <input type="file" id="extract-input" accept=".pdf,.docx,.doc,.txt,.png,.jpg,.jpeg" onchange="handleExtract(this)" />
+      </div>
+      <div id="extract-result" style="display:none; margin-top:20px">
+        <div class="detail-panel">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+            <div>
+              <div style="font-weight:700" id="ext-filename">—</div>
+              <div style="font-size:.78rem;color:var(--muted);margin-top:3px">
+                Method: <strong id="ext-method" style="color:var(--green)">—</strong> &nbsp;|&nbsp;
+                Characters: <strong id="ext-chars">—</strong>
+              </div>
+            </div>
+          </div>
+          <div class="raw-text" id="ext-text" style="max-height:420px"></div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<!-- ═══ DETAIL MODAL ══════════════════════════════════════════════ -->
+<div class="modal-overlay hidden" id="detail-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <div class="detail-header" style="padding-bottom:0;margin-bottom:0;border:none">
+          <div class="detail-avatar" id="modal-avatar">?</div>
+          <div>
+            <div class="detail-name" id="modal-name">—</div>
+            <div class="detail-sub" id="modal-sub">—</div>
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal()">✕ Close</button>
+    </div>
+    <div class="detail-tabs">
+      <button class="dtab active" onclick="switchDTab('overview', this)">Overview</button>
+      <button class="dtab" onclick="switchDTab('experience', this)">Experience</button>
+      <button class="dtab" onclick="switchDTab('education', this)">Education</button>
+      <button class="dtab" onclick="switchDTab('skills', this)">Skills</button>
+      <button class="dtab" onclick="switchDTab('more', this)">Projects & More</button>
+    </div>
+
+    <!-- Overview -->
+    <div class="dtab-content active" id="dtab-overview" style="overflow-y:auto;flex:1">
+      <div class="summary-box" id="modal-summary">—</div>
+      <div class="info-grid" id="modal-info-grid"></div>
+    </div>
+    <!-- Experience -->
+    <div class="dtab-content" id="dtab-experience" style="overflow-y:auto;flex:1">
+      <div class="timeline" id="modal-experience"></div>
+    </div>
+    <!-- Education -->
+    <div class="dtab-content" id="dtab-education" style="overflow-y:auto;flex:1">
+      <div class="timeline" id="modal-education"></div>
+    </div>
+    <!-- Skills -->
+    <div class="dtab-content" id="dtab-skills" style="overflow-y:auto;flex:1">
+      <div class="skills-full" id="modal-skills"></div>
+    </div>
+    <!-- Projects & More -->
+    <div class="dtab-content" id="dtab-more" style="overflow-y:auto;flex:1">
+      <div class="timeline" id="modal-projects"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TOAST ══════════════════════════════════════════════════════ -->
+<div id="toast-container"></div>
+
+<script>
+  // Auto-detect API base: use server origin if served via HTTP, else fallback to localhost:8008
+  const _origin = (window.location.origin && window.location.origin !== 'null') ? window.location.origin : 'http://localhost:8008';
+  const API = `${_origin}/api/v1`;
+
+  /* ── Toast ──────────────────────────────────────────────────── */
+  function toast(title, msg = '', type = 'info') {
+    const el = document.createElement('div');
+    el.className = `toast ${type}`;
+    el.innerHTML = `<div class="toast-title">${title}</div>${msg ? `<div class="toast-msg">${msg}</div>` : ''}`;
+    document.getElementById('toast-container').appendChild(el);
+    setTimeout(() => el.remove(), 4500);
+  }
+
+  /* ── Nav ────────────────────────────────────────────────────── */
+  function showSection(name) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById(`section-${name}`)?.classList.add('active');
+    document.getElementById(`nav-${name}`)?.classList.add('active');
+    if (name === 'candidates') loadCandidates();
+  }
+
+  /* ── Health & Stats ─────────────────────────────────────────── */
+  async function checkHealth() {
+    try {
+      const r = await fetch(`${_origin}/health`);
+      const d = await r.json();
+      document.getElementById('stat-status').textContent = d.status === 'healthy' ? '🟢 Healthy' : '🔴 Down';
+    } catch {
+      document.getElementById('stat-status').textContent = '🔴 Offline';
+    }
+  }
+
+  async function loadStats() {
+    try {
+      const r = await fetch(`${API}/resume?limit=100`);
+      const data = await r.json();
+      const totalEl = document.getElementById('stat-total');
+      const lastEl = document.getElementById('stat-last');
+      if (totalEl) totalEl.textContent = data.length;
+      if (lastEl && data.length > 0) {
+        const last = data[0];
+        const name = `${last.first_name ?? ''} ${last.last_name ?? ''}`.trim();
+        lastEl.textContent = name || last.filename || 'None';
+      }
+    } catch {}
+  }
+
+
+  /* ── URL Helper ─────────────────────────────────────────────── */
+  const safeUrl = (url) => {
+    if (!url || typeof url !== 'string') return '';
+    url = url.trim();
+    if (!url) return '';
+    if (/^(https?:\/\/|mailto:|tel:)/i.test(url)) return url;
+    return 'https://' + url;
+  };
+
+  /* ── Upload ─────────────────────────────────────────────────── */
+  const uploadZone = document.getElementById('upload-zone');
+  uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
+  uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+  uploadZone.addEventListener('drop', e => {
+    e.preventDefault(); uploadZone.classList.remove('drag-over');
+    const f = e.dataTransfer.files[0];
+    if (f) uploadFile(f);
+  });
+
+  function handleFileSelect(input) {
+    if (input.files[0]) uploadFile(input.files[0]);
+  }
+
+  async function uploadFile(file) {
+    const progress = document.getElementById('upload-progress');
+    const fill = document.getElementById('progress-fill');
+    const label = document.getElementById('progress-label');
+    progress.classList.add('visible');
+    fill.style.width = '15%';
+    label.textContent = `📤 Uploading "${file.name}"…`;
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    let pct = 15;
+    const iv = setInterval(() => { pct = Math.min(pct + 8, 85); fill.style.width = pct + '%'; }, 600);
+
+    try {
+      label.textContent = '🤖 AI extracting candidate details…';
+      const r = await fetch(`${API}/upload`, { method: 'POST', body: formData });
+      const data = await r.json();
+      clearInterval(iv);
+      fill.style.width = '100%';
+
+      if (!r.ok) {
+        label.textContent = '❌ Failed!';
+        toast('Upload Failed', data.detail || 'Unknown error', 'error');
+      } else {
+        label.textContent = `✅ "${data.first_name ?? ''} ${data.last_name ?? ''}" saved to database!`;
+        toast('Success!', `Resume for ${data.first_name ?? 'candidate'} extracted & saved.`, 'success');
+        setTimeout(() => { progress.classList.remove('visible'); fill.style.width = '0%'; }, 3000);
+      }
+    } catch (err) {
+      clearInterval(iv);
+      fill.style.width = '0%';
+      label.textContent = '❌ Network error!';
+      toast('Network Error', 'Could not reach the API server.', 'error');
+    }
+  }
+
+  /* ── Render Candidates ─────────────────────────────────────────── */
+  function renderCandidateList(resumes, targetId = 'candidates-list') {
+    const container = typeof targetId === 'string' ? document.getElementById(targetId) : targetId;
+    if (!container) return;
+    if (!resumes || !resumes.length) {
+      container.innerHTML = '<div class="empty-state"><div class="empty-icon">👥</div><h3>No Candidates Found</h3><p>Upload a resume to extract candidate insights.</p></div>';
+      return;
+    }
+    container.innerHTML = resumes.map(r => {
+      const name = `${r.first_name ?? ''} ${r.last_name ?? ''}`.trim() || 'Unknown';
+      const initials = name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+      const skills = r.skills || [];
+      const topSkills = skills.slice(0, 4).map(s => `<span class="skill-chip">${s.name}</span>`).join('');
+      const moreSkills = skills.length > 4 ? `<span class="skill-chip more">+${skills.length - 4}</span>` : '';
+      const location = r.location || '';
+      const email = r.email || '';
+      const linkedin = safeUrl(r.linkedin_url);
+      const github = safeUrl(r.github_url);
+      const portfolio = safeUrl(r.portfolio_url);
+
+      return `
+        <div class="card">
+          <div class="card-header">
+            <div class="avatar">${initials}</div>
+            <div>
+              <div class="candidate-name">${name}</div>
+              <div class="candidate-sub">${r.filename || ''}</div>
+            </div>
+          </div>
+          <div class="card-meta">
+            ${email ? `<div class="meta-row"><span class="meta-icon">📧</span>${email}</div>` : ''}
+            ${r.phone ? `<div class="meta-row"><span class="meta-icon">📱</span>${r.phone}</div>` : ''}
+            ${location ? `<div class="meta-row"><span class="meta-icon">📍</span>${location}</div>` : ''}
+            ${linkedin ? `<div class="meta-row"><span class="meta-icon">💼</span><a href="${linkedin}" target="_blank" rel="noopener noreferrer">LinkedIn ↗</a></div>` : ''}
+            ${github ? `<div class="meta-row"><span class="meta-icon">🐙</span><a href="${github}" target="_blank" rel="noopener noreferrer">GitHub ↗</a></div>` : ''}
+            ${portfolio ? `<div class="meta-row"><span class="meta-icon">🌐</span><a href="${portfolio}" target="_blank" rel="noopener noreferrer">Portfolio ↗</a></div>` : ''}
+          </div>
+          <div class="skills-wrap">${topSkills}${moreSkills}</div>
+          <div class="card-footer">
+            <button class="btn btn-ghost btn-sm" onclick="openDetail(${r.id})">View Details</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteResume(${r.id}, event)">Delete</button>
+            <span class="id-badge">#${r.id}</span>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  const renderCards = renderCandidateList;
+
+  /* ── Load Candidates ─────────────────────────────────────────── */
+  async function loadCandidates() {
+    const container = document.getElementById('candidates-list');
+    container.innerHTML = '<div class="empty-state"><div class="empty-icon">🔄</div><p>Loading…</p></div>';
+    try {
+      const r = await fetch(`${API}/resume?limit=50`);
+      const resumes = await r.json();
+      renderCandidateList(resumes);
+    } catch {
+      container.innerHTML = '<div class="empty-state"><div class="empty-icon">⚠️</div><p>Failed to load. Is the API running?</p></div>';
+    }
+  }
+
+  const loadResumes = loadCandidates;
+
+
+  /* ── Delete Resume ───────────────────────────────────────────── */
+  async function deleteResume(id, e) {
+    if (e) e.stopPropagation();
+    if (!confirm('Are you sure you want to delete this candidate record?')) return;
+    try {
+      const r = await fetch(`${API}/resume/${id}`, { method: 'DELETE' });
+      if (!r.ok) throw new Error('Delete failed');
+      toast('Candidate Deleted', 'The candidate record was removed successfully.', 'success');
+      loadCandidates();
+    } catch (err) {
+      toast('Error', 'Failed to delete candidate.', 'error');
+    }
+  }
+
+  /* ── Candidate Detail Modal ───────────────────────────────────── */
+  async function openDetail(id) {
+    try {
+      const r = await fetch(`${API}/resume/${id}`);
+      if (!r.ok) {
+        toast('Error', 'Failed to fetch candidate details.', 'error');
+        return;
+      }
+      const d = await r.json();
+      const name = `${d.first_name ?? ''} ${d.last_name ?? ''}`.trim() || 'Unknown Candidate';
+      const initials = name.split(' ').filter(Boolean).map(w => w[0]).join('').toUpperCase().slice(0, 2) || '?';
+
+      document.getElementById('modal-avatar').textContent = initials;
+      document.getElementById('modal-name').textContent = name;
+      document.getElementById('modal-sub').textContent = `${d.email ?? ''}${d.phone ? ' · ' + d.phone : ''}`;
+      document.getElementById('modal-summary').textContent = d.summary || 'No summary available.';
+
+      // Info grid
+      const fields = [
+        ['Email', d.email ? `<a href="mailto:${d.email}">${d.email}</a>` : null],
+        ['Phone', d.phone ? `<a href="tel:${d.phone}">${d.phone}</a>` : null],
+        ['Location', d.location],
+        ['LinkedIn', d.linkedin_url ? `<a href="${safeUrl(d.linkedin_url)}" target="_blank" rel="noopener noreferrer">View Profile ↗</a>` : null],
+        ['GitHub', d.github_url ? `<a href="${safeUrl(d.github_url)}" target="_blank" rel="noopener noreferrer">View Profile ↗</a>` : null],
+        ['Portfolio', d.portfolio_url ? `<a href="${safeUrl(d.portfolio_url)}" target="_blank" rel="noopener noreferrer">Open Link ↗</a>` : null],
+      ].filter(([, v]) => v);
+      document.getElementById('modal-info-grid').innerHTML = fields.length
+        ? fields.map(([l, v]) => `<div class="info-item"><label>${l}</label><p>${v}</p></div>`).join('')
+        : '<p style="color:var(--muted);grid-column:span 2">No contact or social details recorded.</p>';
+
+      // Helper to convert tech string or array into array of strings
+      const parseTech = (tech) => {
+        if (!tech) return [];
+        if (Array.isArray(tech)) return tech;
+        if (typeof tech === 'string') return tech.split(',').map(t => t.trim()).filter(Boolean);
+        return [];
+      };
+
+      // Experience
+      document.getElementById('modal-experience').innerHTML = (d.experience && d.experience.length) ? d.experience.map(e => {
+        const techList = parseTech(e.technologies);
+        return `<div class="tl-item">
+          <div class="tl-title">${e.job_title ?? 'Role'} <span style="color:var(--muted);font-weight:400">@ ${e.company ?? 'Company'}</span></div>
+          ${e.location ? `<div class="tl-sub">📍 ${e.location}</div>` : ''}
+          <div class="tl-date">${e.start_date ?? ''} → ${e.is_current ? 'Present' : (e.end_date ?? '')}</div>
+          ${e.description ? `<div class="tl-desc">${e.description}</div>` : ''}
+          ${techList.length ? `<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:5px">${techList.map(t => `<span class="skill-chip">${t}</span>`).join('')}</div>` : ''}
+        </div>`;
+      }).join('') : '<div class="empty-state" style="padding:24px"><p>No experience listed.</p></div>';
+
+      // Education
+      document.getElementById('modal-education').innerHTML = (d.education && d.education.length) ? d.education.map(e =>
+        `<div class="tl-item">
+          <div class="tl-title">${e.degree ?? 'Degree'} ${e.field_of_study ? 'in ' + e.field_of_study : ''}</div>
+          <div class="tl-sub">${e.institution ?? ''}</div>
+          <div class="tl-date">${e.start_date ?? ''} → ${e.end_date ?? ''} ${e.gpa ? `· GPA: ${e.gpa}` : ''}</div>
+          ${e.description ? `<div class="tl-desc">${e.description}</div>` : ''}
+        </div>`
+      ).join('') : '<div class="empty-state" style="padding:24px"><p>No education listed.</p></div>';
+
+      // Skills
+      document.getElementById('modal-skills').innerHTML = (d.skills && d.skills.length) ? d.skills.map(s =>
+        `<span class="skill-chip" style="font-size:.78rem;padding:5px 12px">${s.name}${s.category ? ` <span style="opacity:.6;font-size:.7rem">· ${s.category}</span>` : ''}${s.proficiency ? ` <span style="opacity:.8;font-weight:700">(${s.proficiency})</span>` : ''}</span>`
+      ).join('') : '<p style="color:var(--muted);padding:16px">No skills listed.</p>';
+
+      // Projects & More
+      let moreHtml = '';
+      if (d.projects && d.projects.length) {
+        moreHtml += `<h4 style="margin-bottom:10px;font-size:.9rem;color:var(--accent2)">Projects</h4>` + d.projects.map(p => {
+          const title = p.title || p.name || 'Untitled Project';
+          const techList = parseTech(p.technologies);
+          const pUrl = safeUrl(p.url);
+          return `<div class="tl-item" style="margin-bottom:12px">
+            <div class="tl-title">${title} ${pUrl ? `<a href="${pUrl}" target="_blank" rel="noopener noreferrer" style="font-size:.75rem;font-weight:400">↗ Link</a>` : ''}</div>
+            ${p.description ? `<div class="tl-desc">${p.description}</div>` : ''}
+            ${techList.length ? `<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:5px">${techList.map(t => `<span class="skill-chip">${t}</span>`).join('')}</div>` : ''}
+          </div>`;
+        }).join('');
+      }
+
+      if (d.certifications && d.certifications.length) {
+        moreHtml += `<h4 style="margin-top:16px;margin-bottom:10px;font-size:.9rem;color:var(--accent2)">Certifications</h4>` + d.certifications.map(c =>
+          `<div class="tl-item" style="margin-bottom:12px">
+            <div class="tl-title">📜 ${c.name} ${c.credential_url ? `<a href="${c.credential_url}" target="_blank" rel="noopener" style="font-size:.75rem;font-weight:400">↗ Verify</a>` : ''}</div>
+            ${c.issuing_organization ? `<div class="tl-sub">${c.issuing_organization} ${c.issue_date ? '· ' + c.issue_date : ''}</div>` : ''}
+          </div>`
+        ).join('');
+      }
+
+      if (d.achievements && d.achievements.length) {
+        moreHtml += `<h4 style="margin-top:16px;margin-bottom:10px;font-size:.9rem;color:var(--accent2)">Achievements</h4>` + d.achievements.map(a =>
+          `<div class="tl-item" style="margin-bottom:12px">
+            <div class="tl-title">🏆 ${a.title}</div>
+            ${a.description ? `<div class="tl-desc">${a.description}</div>` : ''}
+          </div>`
+        ).join('');
+      }
+
+      if (d.languages && d.languages.length) {
+        moreHtml += `<h4 style="margin-top:16px;margin-bottom:10px;font-size:.9rem;color:var(--accent2)">Languages</h4><div style="display:flex;flex-wrap:wrap;gap:8px">` + d.languages.map(l =>
+          `<span class="skill-chip">🗣️ ${l.name} ${l.proficiency ? `(${l.proficiency})` : ''}</span>`
+        ).join('') + `</div>`;
+      }
+
+      document.getElementById('modal-projects').innerHTML = moreHtml || '<div class="empty-state" style="padding:24px"><p>No projects, certifications, or achievements listed.</p></div>';
+
+      // Reset tabs
+      document.querySelectorAll('.dtab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.dtab-content').forEach(t => t.classList.remove('active'));
+      document.querySelector('.dtab').classList.add('active');
+      document.getElementById('dtab-overview').classList.add('active');
+
+      document.getElementById('detail-modal').classList.remove('hidden');
+    } catch (err) {
+      console.error('Error in openDetail:', err);
+      toast('Error', 'Failed to open candidate details.', 'error');
+    }
+  }
+
+  function closeModal() { document.getElementById('detail-modal').classList.add('hidden'); }
+
+  function switchDTab(name, btn) {
+    document.querySelectorAll('.dtab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.dtab-content').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(`dtab-${name}`).classList.add('active');
+  }
+  document.getElementById('detail-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+  });
+
+  /* ── Search ──────────────────────────────────────────────────── */
+  async function doSearch() {
+    const q = document.getElementById('search-q').value.trim();
+    const skill = document.getElementById('search-skill').value.trim();
+    if (!q && !skill) { toast('Enter a query', 'Type a name, skill, or keyword.', 'warning'); return; }
+    const params = new URLSearchParams();
+    if (q) params.append('q', q);
+    if (skill) params.append('skill', skill);
+    const r = await fetch(`${API}/search?${params}`);
+    const data = await r.json();
+    renderCards(data, 'search-results');
+  }
+  document.getElementById('header-search').addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      document.getElementById('search-q').value = e.target.value;
+      showSection('search');
+      doSearch();
+    }
+  });
+
+  /* ── Extract Text ────────────────────────────────────────────── */
+  async function handleExtract(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const formData = new FormData();
+    formData.append('file', file);
+    document.getElementById('extract-result').style.display = 'none';
+    toast('Extracting text…', file.name);
+    const r = await fetch(`${API}/extract-text`, { method: 'POST', body: formData });
+    const data = await r.json();
+    if (!r.ok) { toast('Extraction failed', data.detail, 'error'); return; }
+    document.getElementById('ext-filename').textContent = data.filename;
+    document.getElementById('ext-method').textContent = data.extraction_method;
+    document.getElementById('ext-chars').textContent = data.character_count.toLocaleString();
+    document.getElementById('ext-text').textContent = data.raw_text;
+    document.getElementById('extract-result').style.display = 'block';
+    toast('Text extracted!', `${data.character_count} chars via ${data.extraction_method}`, 'success');
+  }
+
+  /* ── Init ────────────────────────────────────────────────────── */
+  checkHealth();
+  loadStats();
+  loadCandidates();
+
+</script>
+</body>
+</html>

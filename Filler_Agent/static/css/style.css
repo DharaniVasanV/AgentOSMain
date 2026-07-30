@@ -1,0 +1,348 @@
+/* ====================================================
+   FILLER AGENT - Sleek Dark Glassmorphism Design System
+   ==================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+    --bg-dark: #07090e;
+    --bg-card: rgba(17, 24, 39, 0.65);
+    --bg-card-hover: rgba(25, 34, 53, 0.75);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --glass-border-focus: rgba(99, 102, 241, 0.5);
+    --primary-indigo: #6366f1;
+    --primary-violet: #8b5cf6;
+    --accent-emerald: #10b981;
+    --accent-amber: #f59e0b;
+    --accent-rose: #f43f5e;
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --radius-xl: 20px;
+    --radius-lg: 14px;
+    --radius-md: 10px;
+    --shadow-glow: 0 0 35px rgba(99, 102, 241, 0.18);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: var(--bg-dark);
+    color: var(--text-primary);
+    min-height: 100vh;
+    overflow-x: hidden;
+    background-image:
+        radial-gradient(at 10% 10%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+        radial-gradient(at 90% 80%, rgba(139, 92, 246, 0.12) 0px, transparent 50%),
+        radial-gradient(at 50% 50%, rgba(16, 185, 129, 0.05) 0px, transparent 50%);
+    background-attachment: fixed;
+}
+
+/* Glassmorphism Card Utility */
+.glass-card {
+    background: var(--bg-card);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card:hover {
+    border-color: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5), var(--shadow-glow);
+}
+
+.glass-panel {
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+}
+
+/* Typography & Text Styles */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+.text-gradient {
+    background: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #c084fc 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.text-gradient-emerald {
+    background: linear-gradient(135deg, #6ee7b7 0%, #10b981 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.text-secondary-custom {
+    color: var(--text-secondary);
+}
+
+/* Custom Navigation Bar */
+.navbar-glass {
+    background: rgba(11, 15, 25, 0.75);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--glass-border);
+    padding: 1rem 2rem;
+}
+
+.brand-logo {
+    font-size: 1.4rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    color: #fff;
+    text-decoration: none;
+}
+
+.brand-icon {
+    width: 38px;
+    height: 38px;
+    background: linear-gradient(135deg, var(--primary-indigo), var(--primary-violet));
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
+}
+
+/* Buttons & Controls */
+.btn-glow {
+    background: linear-gradient(135deg, var(--primary-indigo), var(--primary-violet));
+    color: #fff;
+    font-weight: 600;
+    padding: 0.75rem 1.6rem;
+    border-radius: var(--radius-md);
+    border: none;
+    box-shadow: 0 4px 20px rgba(99, 102, 241, 0.35);
+    transition: all 0.25s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.btn-glow:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 25px rgba(99, 102, 241, 0.5);
+    color: #fff;
+}
+
+.btn-glass-secondary {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+    border: 1px solid var(--glass-border);
+    font-weight: 500;
+    padding: 0.75rem 1.4rem;
+    border-radius: var(--radius-md);
+    transition: all 0.2s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-glass-secondary:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Input Controls */
+.form-control-glass {
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    padding: 0.85rem 1.2rem;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+}
+
+.form-control-glass:focus {
+    background: rgba(15, 23, 42, 0.9);
+    border-color: var(--glass-border-focus);
+    box-shadow: 0 0 15px rgba(99, 102, 241, 0.25);
+    color: #fff;
+    outline: none;
+}
+
+.form-control-glass::placeholder {
+    color: var(--text-muted);
+}
+
+/* Custom Badges */
+.badge-glass {
+    padding: 0.4rem 0.8rem;
+    border-radius: 50px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.badge-profile {
+    background: rgba(99, 102, 241, 0.15);
+    color: #a5b4fc;
+    border: 1px solid rgba(99, 102, 241, 0.3);
+}
+
+.badge-ai {
+    background: rgba(139, 92, 246, 0.15);
+    color: #c084fc;
+    border: 1px solid rgba(139, 92, 246, 0.3);
+}
+
+.badge-user {
+    background: rgba(16, 185, 129, 0.15);
+    color: #6ee7b7;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.badge-missing {
+    background: rgba(244, 63, 94, 0.15);
+    color: #fda4af;
+    border: 1px solid rgba(244, 63, 94, 0.3);
+}
+
+/* Custom Modals */
+.modal-content-glass {
+    background: #0f172a;
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-xl);
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.8);
+    color: var(--text-primary);
+}
+
+/* Execution Timeline & Status */
+.timeline-container {
+    position: relative;
+    padding-left: 2.5rem;
+}
+
+.timeline-container::before {
+    content: '';
+    position: absolute;
+    left: 1rem;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.step-card {
+    position: relative;
+    margin-bottom: 1.5rem;
+    padding: 1.2rem 1.5rem;
+    border-radius: var(--radius-md);
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid var(--glass-border);
+    transition: all 0.3s ease;
+}
+
+.step-icon {
+    position: absolute;
+    left: -2.3rem;
+    top: 1.2rem;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #1e293b;
+    border: 2px solid var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    transition: all 0.3s ease;
+}
+
+.step-card.status-running {
+    border-color: var(--primary-indigo);
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
+}
+
+.step-card.status-running .step-icon {
+    background: var(--primary-indigo);
+    border-color: var(--primary-indigo);
+    color: #fff;
+    box-shadow: 0 0 15px rgba(99, 102, 241, 0.6);
+    animation: pulse 1.5s infinite;
+}
+
+.step-card.status-success {
+    border-color: rgba(16, 185, 129, 0.3);
+}
+
+.step-card.status-success .step-icon {
+    background: var(--accent-emerald);
+    border-color: var(--accent-emerald);
+    color: #fff;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.15);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* Toast Container */
+.toast-container-custom {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    z-index: 9999;
+}
+
+.toast-custom {
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    color: #fff;
+    padding: 1rem 1.4rem;
+    border-radius: var(--radius-md);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    margin-top: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    animation: slideInRight 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}

@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+
+{% block title %}Missing Information - Filler Agent{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="glass-card p-4 mb-4 border-start border-4 border-amber">
+        <div class="d-flex align-items-center gap-3">
+            <div class="brand-icon" style="background: linear-gradient(135deg, var(--accent-amber), var(--accent-rose)); width: 48px; height: 48px;">
+                <i class="fa-solid fa-triangle-exclamation fs-4"></i>
+            </div>
+            <div>
+                <h3 class="fw-bold mb-1">Missing Information Required</h3>
+                <p class="text-secondary-custom mb-0">The AI could not automatically match answers for {{ missing_questions|length }} required fields. Please provide your input below.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Missing Questions Form -->
+    <form id="missingInfoForm">
+        <div class="row g-4 mb-4">
+            {% for q in missing_questions %}
+            <div class="col-md-6">
+                <div class="glass-card p-4 h-100 d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="badge badge-glass badge-missing"><i class="fa-solid fa-asterisk"></i> Field #{{ loop.index }}</span>
+                            <span class="badge badge-glass badge-profile text-uppercase fs-8">{{ q.field_type }}</span>
+                        </div>
+                        <h5 class="fw-bold text-light mb-3">{{ q.question_text }}</h5>
+                        
+                        {% if q.field_type == 'radio' or q.field_type == 'dropdown' %}
+                            <select class="form-select form-control-glass missing-q-input mb-3" data-question-id="{{ q.id }}" required>
+                                <option value="">-- Choose Option --</option>
+                                {% for opt in q.options %}
+                                    <option value="{{ opt }}">{{ opt }}</option>
+                                {% endfor %}
+                            </select>
+                        {% elif q.field_type == 'checkbox' %}
+                            <div class="d-flex flex-column gap-2 mb-3 checkbox-group" data-question-id="{{ q.id }}">
+                                {% for opt in q.options %}
+                                    <div class="form-check custom-checkbox">
+                                        <input class="form-check-input missing-q-checkbox-val" type="checkbox" id="chk_{{ q.id }}_{{ loop.index }}" value="{{ opt }}">
+                                        <label class="form-check-label text-light small cursor-pointer" for="chk_{{ q.id }}_{{ loop.index }}">
+                                            {{ opt }}
+                                        </label>
+                                    </div>
+                                {% endfor %}
+                                <!-- Hidden input to hold comma-separated selections, updated via JS -->
+                                <input type="hidden" class="missing-q-input" data-question-id="{{ q.id }}" required>
+                            </div>
+                        {% elif q.field_type == 'date' %}
+                            <input type="date" class="form-control form-control-glass missing-q-input mb-3" data-question-id="{{ q.id }}" required>
+                        {% elif q.field_type == 'time' %}
+                            <input type="time" class="form-control form-control-glass missing-q-input mb-3" data-question-id="{{ q.id }}" required>
+                        {% elif q.field_type == 'paragraph' %}
+                            <textarea class="form-control form-control-glass missing-q-input mb-3" rows="3" data-question-id="{{ q.id }}" placeholder="Type your answer..." required></textarea>
+                        {% elif q.field_type == 'file' %}
+                            <div class="d-flex flex-column gap-2 mb-3">
+                                <input type="text" id="file_path_{{ q.id }}" class="form-control form-control-glass missing-q-input text-info font-monospace small" data-question-id="{{ q.id }}" value="uploads/sample_resume.pdf" placeholder="File path or URL..." required>
+                                
+                                <div class="d-flex align-items-center justify-content-between gap-2">
+                                    <label class="btn btn-sm btn-glow py-1 px-3 d-inline-flex align-items-center cursor-pointer mb-0 fs-7">
+                                        <i class="fa-solid fa-folder-open me-1 text-warning"></i> Choose File
+                                        <input type="file" class="d-none computer-file-picker" data-target-id="file_path_{{ q.id }}" data-link-id="file_link_m_{{ q.id }}">
+                                    </label>
+                                    
+                                    <a id="file_link_m_{{ q.id }}" href="/uploads/sample_resume.pdf" target="_blank" class="btn btn-sm btn-glass-secondary text-info py-1 px-3 d-inline-flex align-items-center fs-7">
+                                        <i class="fa-solid fa-arrow-up-right-from-square me-1"></i> Open File
+                                    </a>
+                                </div>
+                            </div>
+
+                        {% else %}
+                            <input type="text" class="form-control form-control-glass missing-q-input mb-3" data-question-id="{{ q.id }}" placeholder="Type your answer..." required>
+                        {% endif %}
+
+                    </div>
+
+                    <div class="form-check custom-checkbox mt-2">
+                        <input class="form-check-input missing-q-remember" type="checkbox" id="remember_{{ q.id }}" data-question-id="{{ q.id }}" checked>
+                        <label class="form-check-label text-secondary-custom small cursor-pointer" for="remember_{{ q.id }}">
+                            <i class="fa-solid fa-bookmark text-indigo me-1"></i> Remember this answer in my profile for future forms
+                        </label>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="d-flex justify-content-end gap-3">
+            <a href="/analyze/{{ session.id }}" class="btn-glass-secondary py-3 px-4">
+                <i class="fa-solid fa-arrow-left me-1"></i> Back to Analysis
+            </a>
+            <button type="submit" id="btnSaveMissing" class="btn-glow py-3 px-5">
+                <i class="fa-solid fa-check-circle me-1"></i> Save & Continue to Review
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Checkbox group value synchronization
+document.querySelectorAll('.checkbox-group').forEach(group => {
+    const hiddenInp = group.querySelector('.missing-q-input');
+    const checkboxes = group.querySelectorAll('.missing-q-checkbox-val');
+    const updateHidden = () => {
+        const selected = [];
+        checkboxes.forEach(cb => {
+            if (cb.checked) {
+                selected.push(cb.value);
+            }
+        });
+        hiddenInp.value = selected.join(', ');
+    };
+    checkboxes.forEach(cb => cb.addEventListener('change', updateHidden));
+});
+
+document.getElementById('missingInfoForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('btnSaveMissing');
+    btn.disabled = true;
+    btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Saving...`;
+
+    const answers = {};
+    const remember_keys = {};
+
+    document.querySelectorAll('.missing-q-input').forEach(inp => {
+        const qId = inp.dataset.questionId;
+        answers[qId] = inp.value.trim();
+    });
+
+    document.querySelectorAll('.missing-q-remember').forEach(chk => {
+        const qId = chk.dataset.questionId;
+        remember_keys[qId] = chk.checked;
+    });
+
+    try {
+        const res = await apiRequest(`/api/missing_info/{{ session.id }}`, 'POST', {
+            answers,
+            remember_keys
+        });
+        showToast('Answers saved successfully!', 'success');
+        setTimeout(() => {
+            window.location.href = res.redirect_url;
+        }, 600);
+    } catch (err) {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fa-solid fa-check-circle me-1"></i> Save & Continue to Review`;
+    }
+});
+
+// Computer File Picker Change Handler
+document.querySelectorAll('.computer-file-picker').forEach(picker => {
+    picker.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const targetId = picker.dataset.targetId;
+        const linkId = picker.dataset.linkId;
+        const targetInput = document.getElementById(targetId);
+        const linkElem = document.getElementById(linkId);
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        showToast(`Uploading ${file.name}...`, 'info');
+        try {
+            const res = await fetch('/api/upload-file', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await res.json();
+            if (data.file_path && targetInput) {
+                targetInput.value = data.file_path;
+                if (linkElem) {
+                    linkElem.href = '/' + data.file_path;
+                    linkElem.classList.remove('d-none');
+                }
+                showToast(`File ${data.filename} uploaded & ready for auto-fill!`, 'success');
+            }
+        } catch (err) {
+            showToast('File upload failed: ' + err.message, 'error');
+        }
+    });
+});
+
+</script>
+
+{% endblock %}

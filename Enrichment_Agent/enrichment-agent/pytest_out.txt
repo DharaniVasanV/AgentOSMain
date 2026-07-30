@@ -1,0 +1,18 @@
+============================= test session starts =============================
+platform win32 -- Python 3.10.0, pytest-8.4.2, pluggy-1.6.0
+rootdir: D:\Projects\Enrichment Agent\enrichment-agent
+plugins: anyio-4.13.0, asyncio-0.23.8
+asyncio: mode=strict
+collected 8 items
+
+tests\test_api.py ...                                                    [ 37%]
+tests\test_enrichment.py ..                                              [ 62%]
+tests\test_gap_detector.py ...                                           [100%]
+
+============================== warnings summary ===============================
+C:\Program Files\Python310\lib\site-packages\starlette\formparsers.py:12
+  C:\Program Files\Python310\lib\site-packages\starlette\formparsers.py:12: PendingDeprecationWarning: Please use `import python_multipart` instead.
+    import multipart
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================== 8 passed, 1 warning in 2.48s =========================

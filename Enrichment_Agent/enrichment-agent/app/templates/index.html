@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Enrichment Agent Dashboard</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+<div class="app-container">
+  <!-- Main Content -->
+  <main class="main-content">
+    <!-- Header -->
+    <header class="header">
+      <div class="brand" style="margin-bottom: 0;">
+        <div class="brand-icon">⚡</div>
+        <div>
+          <div class="brand-title" style="font-size: 1.35rem; font-weight: 800;">Enrichment Agent</div>
+          <div class="brand-subtitle" style="font-size: 0.8rem; color: var(--text-muted);">AgentOS Subsystem • Real-time telemetry & enriched opportunities</div>
+        </div>
+      </div>
+
+      <div class="action-bar">
+        <div class="agent-status" style="margin-right: 1rem; display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; color: var(--text-muted); background: rgba(255, 255, 255, 0.03); padding: 0.5rem 0.85rem; border-radius: 8px; border: 1px solid var(--border-color);">
+          <div class="status-dot"></div>
+          <span>Agent Online & Listening</span>
+        </div>
+        <button class="btn btn-secondary" onclick="loadDashboardData()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+          Refresh
+        </button>
+        <button class="btn btn-primary" id="btn-simulate-enrich">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          + Enrich Record
+        </button>
+      </div>
+    </header>
+
+    <!-- Metrics Bar -->
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-icon indigo">📊</div>
+        <div class="metric-info">
+          <div class="val" id="metric-total">0</div>
+          <div class="lbl">Total Records</div>
+        </div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-icon purple">🏆</div>
+        <div class="metric-info">
+          <div class="val" id="metric-hackathons">0</div>
+          <div class="lbl">Hackathons</div>
+        </div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-icon cyan">💼</div>
+        <div class="metric-info">
+          <div class="val" id="metric-internships">0</div>
+          <div class="lbl">Internships</div>
+        </div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-icon amber">🎓</div>
+        <div class="metric-info">
+          <div class="val" id="metric-certifications">0</div>
+          <div class="lbl">Certifications</div>
+        </div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-icon emerald">✨</div>
+        <div class="metric-info">
+          <div class="val" id="metric-enriched">0</div>
+          <div class="lbl">Successfully Enriched</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Dashboard View -->
+    <div class="tab-panel active" id="tab-dashboard">
+      <h2 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 1.25rem; color: #fff;">All Enriched Opportunities</h2>
+      <div class="records-grid" id="grid-recent-records">
+        <!-- Loaded via JavaScript -->
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- View Details / Simulation Modal -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal-card">
+    <div class="modal-header">
+      <div class="modal-header-title">
+        <span style="font-size: 1.25rem;">📄</span>
+        <h2 id="modal-title">Opportunity Details</h2>
+      </div>
+      <button class="modal-close" id="modal-close-btn">&times;</button>
+    </div>
+    <div class="modal-body" id="modal-body-content">
+      <!-- Modal Content rendered dynamically -->
+    </div>
+  </div>
+</div>
+
+<script src="/static/js/dashboard.js?v=10.0.0"></script>
+</body>
+</html>

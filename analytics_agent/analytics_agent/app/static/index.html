@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgentOS — Analytics Agent Dashboard</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Chart.js for canvas rendering -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- FontAwesome / Lucide Icons via CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- html2pdf.js for generating formatted PDF reports -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  
+  <style>
+    :root {
+      --bg-dark: #090d16;
+      --bg-card: rgba(17, 24, 39, 0.75);
+      --bg-card-hover: rgba(26, 36, 56, 0.9);
+      --bg-modal: #111827;
+      --border-color: rgba(255, 255, 255, 0.08);
+      --border-glow: rgba(99, 102, 241, 0.35);
+      
+      --primary: #6366f1;
+      --primary-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+      --accent-cyan: #06b6d4;
+      --accent-emerald: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-rose: #f43f5e;
+
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      
+      --shadow-glow: 0 8px 32px rgba(99, 102, 241, 0.2);
+      --font-main: 'Inter', system-ui, sans-serif;
+      --font-heading: 'Outfit', 'Inter', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      background-image: 
+        radial-gradient(at 15% 15%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+        radial-gradient(at 85% 85%, rgba(168, 85, 247, 0.12) 0px, transparent 50%);
+      background-attachment: fixed;
+      color: var(--text-main);
+      font-family: var(--font-main);
+      min-height: 100vh;
+      padding-bottom: 3rem;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .brand-title {
+      font-family: var(--font-heading);
+      font-size: 1.8rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .badge {
+      font-size: 0.72rem;
+      font-weight: 700;
+      background: var(--primary-gradient);
+      color: #fff;
+      padding: 0.2rem 0.6rem;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.6rem 1.1rem;
+      border-radius: var(--radius-md);
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: 1px solid var(--border-color);
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-main);
+      backdrop-filter: blur(10px);
+    }
+
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+      transform: translateY(-1px);
+    }
+
+    .btn-primary {
+      background: var(--primary-gradient);
+      border: none;
+      box-shadow: 0 4px 15px rgba(99, 102, 241, 0.35);
+    }
+
+    .btn-primary:hover {
+      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+    }
+
+    /* Filter Pill Group */
+    .filter-group {
+      display: flex;
+      background: rgba(15, 23, 42, 0.8);
+      padding: 0.25rem;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-color);
+    }
+
+    .filter-btn {
+      padding: 0.4rem 0.85rem;
+      font-size: 0.85rem;
+      font-weight: 500;
+      border-radius: var(--radius-sm);
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .filter-btn.active {
+      background: rgba(99, 102, 241, 0.25);
+      color: #a5b4fc;
+      font-weight: 600;
+      border: 1px solid rgba(99, 102, 241, 0.4);
+    }
+
+    /* Top Cards Grid */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 2rem;
+    }
+
+    .card {
+      background: var(--bg-card);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 1.25rem;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+    }
+
+    .card:hover {
+      border-color: var(--border-glow);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-glow);
+    }
+
+    .card-label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.5rem;
+    }
+
+    .card-value {
+      font-family: var(--font-heading);
+      font-size: 2.1rem;
+      font-weight: 700;
+    }
+
+    .card-subtitle {
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      margin-top: 0.25rem;
+    }
+
+    /* AI Insights Banner */
+    .insights-card {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.12) 0%, rgba(168, 85, 247, 0.08) 100%);
+      border: 1px solid var(--border-glow);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .insights-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .insights-title {
+      font-family: var(--font-heading);
+      font-size: 1.2rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: #a5b4fc;
+    }
+
+    .insights-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .insight-box {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 1rem;
+    }
+
+    .insight-box-title {
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.6rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .insight-list {
+      list-style: none;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .insight-list li {
+      margin-bottom: 0.4rem;
+      position: relative;
+      padding-left: 1rem;
+      line-height: 1.4;
+    }
+
+    .insight-list li::before {
+      content: "•";
+      position: absolute;
+      left: 0;
+      color: var(--primary);
+    }
+
+    /* Empty State Box */
+    .empty-box {
+      background: rgba(17, 24, 39, 0.5);
+      border: 2px dashed rgba(255, 255, 255, 0.1);
+      border-radius: var(--radius-lg);
+      padding: 3.5rem 2rem;
+      text-align: center;
+      margin: 2rem 0;
+    }
+
+    .empty-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-top: 0.75rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .empty-desc {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      max-width: 450px;
+      margin: 0 auto 1.5rem auto;
+    }
+
+    /* Charts Grid */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    @media (max-width: 768px) {
+      .charts-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .chart-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+    }
+
+    .chart-header {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--text-main);
+    }
+
+    .chart-wrapper {
+      position: relative;
+      height: 250px;
+      width: 100%;
+    }
+
+    /* Modal Form */
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-box {
+      background: var(--bg-modal);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 650px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 2rem;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .modal-title {
+      font-family: var(--font-heading);
+      font-size: 1.3rem;
+      font-weight: 700;
+    }
+
+    .close-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 0.5rem;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 1.5rem;
+      overflow-x: auto;
+    }
+
+    .tab {
+      padding: 0.5rem 1rem;
+      font-size: 0.85rem;
+      font-weight: 500;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      white-space: nowrap;
+    }
+
+    .tab.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+      font-weight: 600;
+    }
+
+    .form-group {
+      margin-bottom: 1.2rem;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-bottom: 0.35rem;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 0.6rem 0.85rem;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      color: var(--text-main);
+      font-size: 0.9rem;
+      outline: none;
+    }
+
+    .form-control:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.25);
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    /* Report Content */
+    .report-box {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      margin-top: 1rem;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <div class="brand">
+        <i data-lucide="activity" style="color: #818cf8; width: 32px; height: 32px;"></i>
+        <div>
+          <div class="brand-title">Analytics Agent</div>
+          <span class="badge">Analytics Engine</span>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <!-- Date Filters -->
+        <div class="filter-group">
+          <button className="filter-btn" class="filter-btn" onclick="setPeriod('today')">Today</button>
+          <button className="filter-btn" class="filter-btn active" id="btn-week" onclick="setPeriod('week')">This Week</button>
+          <button className="filter-btn" class="filter-btn" onclick="setPeriod('month')">This Month</button>
+        </div>
+
+        <button class="btn btn-primary" onclick="openModal('data-modal')">
+          <i data-lucide="plus-circle" style="width: 18px; height: 18px;"></i>
+          Add Analytics Data
+        </button>
+
+        <button class="btn" onclick="triggerReport('weekly')">
+          <i data-lucide="file-text" style="width: 18px; height: 18px;"></i>
+          Weekly Report
+        </button>
+
+        <button class="btn" onclick="triggerReport('monthly')">
+          <i data-lucide="calendar" style="width: 18px; height: 18px;"></i>
+          Monthly Report
+        </button>
+      </div>
+    </header>
+
+    <!-- Top Cards Grid -->
+    <div class="cards-grid">
+      <!-- Productivity Score -->
+      <div class="card">
+        <div class="card-label">Productivity Score</div>
+        <div class="card-value" id="card-score" style="color: #818cf8;">--</div>
+        <div class="card-subtitle" id="card-score-sub">Backend Algorithm (0-100)</div>
+      </div>
+
+      <!-- Tasks Completed -->
+      <div class="card">
+        <div class="card-label">Tasks Completed</div>
+        <div class="card-value" id="card-tasks" style="color: #34d399;">--</div>
+        <div class="card-subtitle" id="card-tasks-sub">0 total logged</div>
+      </div>
+
+      <!-- Meetings -->
+      <div class="card">
+        <div class="card-label">Meetings</div>
+        <div class="card-value" id="card-meetings" style="color: #38bdf8;">--</div>
+        <div class="card-subtitle" id="card-meetings-sub">0 minutes duration</div>
+      </div>
+
+      <!-- Opportunities -->
+      <div class="card">
+        <div class="card-label">Opportunities</div>
+        <div class="card-value" id="card-opps" style="color: #fbbf24;">--</div>
+        <div class="card-subtitle">Detected via Email</div>
+      </div>
+
+      <!-- Learning Activity -->
+      <div class="card">
+        <div class="card-label">Learning Activity</div>
+        <div class="card-value" id="card-learning" style="color: #c084fc;">--</div>
+        <div class="card-subtitle" id="card-learning-sub">0 minutes total</div>
+      </div>
+    </div>
+
+    <!-- AI Insights Section -->
+    <div class="insights-card">
+      <div class="insights-header">
+        <div class="insights-title">
+          <i data-lucide="sparkles" style="color: #c084fc; width: 22px; height: 22px;"></i>
+          <span>AI Insights & Recommendations</span>
+        </div>
+        <button class="btn" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;" onclick="loadAIInsights()">
+          <i data-lucide="refresh-cw" style="width: 14px; height: 14px;"></i> Refresh Insights
+        </button>
+      </div>
+      <div id="ai-summary-text" style="color: var(--text-main); font-size: 0.95rem; margin-bottom: 0.5rem; font-weight: 500;">
+        Click refresh or add data to generate AI interpretation.
+      </div>
+      <div class="insights-grid" id="ai-insights-grid">
+        <div class="insight-box">
+          <div class="insight-box-title" style="color: #34d399;">
+            <i data-lucide="trending-up" style="width: 16px; height: 16px;"></i> Positive Trends
+          </div>
+          <ul class="insight-list" id="ai-positive-list"><li>No data analyzed yet</li></ul>
+        </div>
+        <div class="insight-box">
+          <div class="insight-box-title" style="color: #f87171;">
+            <i data-lucide="alert-triangle" style="width: 16px; height: 16px;"></i> Weak Areas & Warnings
+          </div>
+          <ul class="insight-list" id="ai-weak-list"><li>No warnings recorded</li></ul>
+        </div>
+        <div class="insight-box">
+          <div class="insight-box-title" style="color: #818cf8;">
+            <i data-lucide="lightbulb" style="width: 16px; height: 16px;"></i> Recommendations
+          </div>
+          <ul class="insight-list" id="ai-recs-list"><li>Log data to view AI suggestions</li></ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State View -->
+    <div id="empty-state-view" class="empty-box" style="display: none;">
+      <i data-lucide="bar-chart-2" style="width: 54px; height: 54px; color: var(--text-dim);"></i>
+      <div class="empty-title">No analytics data available yet.</div>
+      <div class="empty-desc">
+        There are no real analytics events recorded for this filter period. Use the manual form to log your productivity data.
+      </div>
+      <button class="btn btn-primary" onclick="openModal('data-modal')">
+        <i data-lucide="plus-circle" style="width: 18px; height: 18px;"></i> Log Real Analytics Data
+      </button>
+    </div>
+
+    <!-- Charts Section -->
+    <div id="charts-view" class="charts-grid">
+      <!-- 1. Productivity Trend -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <i data-lucide="line-chart" style="color: #818cf8; width: 18px; height: 18px;"></i>
+          Productivity Trend
+        </div>
+        <div class="chart-wrapper">
+          <canvas id="chart-productivity"></canvas>
+        </div>
+      </div>
+
+      <!-- 2. Task Completion -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <i data-lucide="check-square" style="color: #34d399; width: 18px; height: 18px;"></i>
+          Task Completion Status
+        </div>
+        <div class="chart-wrapper">
+          <canvas id="chart-tasks"></canvas>
+        </div>
+      </div>
+
+      <!-- 3. Email Distribution -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <i data-lucide="mail" style="color: #fbbf24; width: 18px; height: 18px;"></i>
+          Email Category Distribution
+        </div>
+        <div class="chart-wrapper">
+          <canvas id="chart-emails"></canvas>
+        </div>
+      </div>
+
+      <!-- 4. Meeting Activity -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <i data-lucide="video" style="color: #38bdf8; width: 18px; height: 18px;"></i>
+          Meeting Activity (Minutes)
+        </div>
+        <div class="chart-wrapper">
+          <canvas id="chart-meetings"></canvas>
+        </div>
+      </div>
+
+
+      <!-- 6. Career Progress -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <i data-lucide="briefcase" style="color: #f43f5e; width: 18px; height: 18px;"></i>
+          Career Activity & Status
+        </div>
+        <div class="chart-wrapper">
+          <canvas id="chart-career"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Manual Input Modal -->
+  <div class="modal" id="data-modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title">Add Real Analytics Data</div>
+        <button class="close-btn" onclick="closeModal('data-modal')">&times;</button>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tabs">
+        <button class="tab active" onclick="switchTab('email-tab')">Email</button>
+        <button class="tab" onclick="switchTab('meeting-tab')">Meeting</button>
+        <button class="tab" onclick="switchTab('task-tab')">Task</button>
+        <button class="tab" onclick="switchTab('learning-tab')">Learning</button>
+        <button class="tab" onclick="switchTab('career-tab')">Career</button>
+      </div>
+
+      <form id="manual-form" onsubmit="submitManualForm(event)">
+        <!-- EMAIL FORM -->
+        <div id="email-tab" class="tab-pane">
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Emails Processed</label>
+              <input type="number" id="em-processed" class="form-control" placeholder="e.g. 15" min="0">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Category</label>
+              <input type="text" id="em-category" class="form-control" placeholder="e.g. Client Communication">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Opportunities Detected</label>
+            <input type="number" id="em-opps" class="form-control" placeholder="e.g. 2" min="0">
+          </div>
+        </div>
+
+        <!-- MEETING FORM -->
+        <div id="meeting-tab" class="tab-pane" style="display: none;">
+          <div class="form-group">
+            <label class="form-label">Meeting Title</label>
+            <input type="text" id="mt-title" class="form-control" placeholder="e.g. Sprint Planning Sync">
+          </div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Duration (Minutes)</label>
+              <input type="number" id="mt-duration" class="form-control" placeholder="e.g. 45" min="0">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Attended By</label>
+              <select id="mt-attended" class="form-control">
+                <option value="user" selected>User</option>
+                <option value="ai">AI Agent</option>
+                <option value="both">Both User & AI</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Tasks Extracted</label>
+            <input type="number" id="mt-tasks" class="form-control" placeholder="e.g. 3" min="0">
+          </div>
+        </div>
+
+        <!-- TASK FORM -->
+        <div id="task-tab" class="tab-pane" style="display: none;">
+          <div class="form-group">
+            <label class="form-label">Task Title</label>
+            <input type="text" id="tk-title" class="form-control" placeholder="e.g. Implement Analytics API">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Status</label>
+            <select id="tk-status" class="form-control">
+              <option value="completed" selected>Completed</option>
+              <option value="pending">Pending</option>
+              <option value="overdue">Overdue</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- LEARNING FORM -->
+        <div id="learning-tab" class="tab-pane" style="display: none;">
+          <div class="form-group">
+            <label class="form-label">Activity / Resource</label>
+            <input type="text" id="lr-activity" class="form-control" placeholder="e.g. FastAPI & Async Python Course">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Skill</label>
+            <input type="text" id="lr-skill" class="form-control" placeholder="e.g. System Design">
+          </div>
+        </div>
+
+
+        <!-- CAREER FORM -->
+        <div id="career-tab" class="tab-pane" style="display: none;">
+          <div class="form-group">
+            <label class="form-label">Application Position</label>
+            <input type="text" id="cr-app" class="form-control" placeholder="e.g. Senior AI Engineer">
+          </div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Application Status</label>
+              <select id="cr-status" class="form-control">
+                <option value="Applied" selected>Applied</option>
+                <option value="Interviewing">Interviewing</option>
+                <option value="Offer">Offer Received</option>
+                <option value="Rejected">Rejected</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">ATS Score (%)</label>
+              <input type="number" id="cr-ats" class="form-control" placeholder="e.g. 88" min="0" max="100">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Skills Gained</label>
+            <input type="text" id="cr-skills" class="form-control" placeholder="e.g. Groq SDK, System Architecture">
+          </div>
+        </div>
+
+        <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end; gap: 0.75rem;">
+          <button type="button" class="btn" onclick="closeModal('data-modal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Analytics Data</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Reports Modal -->
+  <div class="modal" id="report-modal">
+    <div class="modal-box" style="max-width: 750px;">
+      <div class="modal-header">
+        <div class="modal-title" id="report-modal-title">Analytics Productivity Report</div>
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+          <button id="pdf-download-btn" class="btn btn-primary" style="display: none; padding: 0.4rem 0.8rem; font-size: 0.82rem;" onclick="downloadPDFReport()">
+            <i data-lucide="download" style="width: 14px; height: 14px;"></i> Download PDF
+          </button>
+          <button class="close-btn" onclick="closeModal('report-modal')">&times;</button>
+        </div>
+      </div>
+      <div id="report-modal-content">
+        <div style="text-align: center; padding: 2rem; color: var(--text-muted);">Generating report...</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentPeriod = 'week';
+    let chartInstances = {};
+    let currentReportData = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+      loadDashboard();
+    });
+
+    function setPeriod(period) {
+      currentPeriod = period;
+      document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+      loadDashboard();
+    }
+
+    async function loadDashboard() {
+      try {
+        const res = await fetch(`/api/analytics/dashboard?user_id=user_1&filter_period=${currentPeriod}`);
+        const data = await res.json();
+
+        // Update Top Cards
+        document.getElementById('card-score').innerText = data.has_data ? data.productivity_score : '0.0';
+        document.getElementById('card-tasks').innerText = data.task.completed;
+        document.getElementById('card-tasks-sub').innerText = `${data.task.total} total logged`;
+        document.getElementById('card-meetings').innerText = data.meeting.total_meetings;
+        document.getElementById('card-meetings-sub').innerText = `${data.meeting.total_duration_minutes} minutes duration`;
+        document.getElementById('card-opps').innerText = data.email.opportunities_detected;
+        document.getElementById('card-learning').innerText = data.learning.activities_completed;
+        document.getElementById('card-learning-sub').innerText = `${(data.learning.skills_worked_on || []).length} skills logged`;
+
+        // Toggle Empty State vs Charts
+        const emptyBox = document.getElementById('empty-state-view');
+        const chartsView = document.getElementById('charts-view');
+
+        if (!data.has_data) {
+          emptyBox.style.display = 'block';
+          chartsView.style.display = 'none';
+        } else {
+          emptyBox.style.display = 'none';
+          chartsView.style.display = 'grid';
+          renderCharts(data);
+        }
+
+        // Auto load AI insights
+        loadAIInsights();
+
+      } catch (err) {
+        console.error('Failed to load dashboard:', err);
+      }
+    }
+
+    async function loadAIInsights() {
+      try {
+        const res = await fetch(`/api/insights?user_id=user_1&filter_period=${currentPeriod}`);
+        const data = await res.json();
+
+        document.getElementById('ai-summary-text').innerText = data.summary;
+
+        document.getElementById('ai-positive-list').innerHTML = (data.positive_trends || [])
+          .map(item => `<li>${item}</li>`).join('') || '<li>No positive trends recorded yet</li>';
+
+        document.getElementById('ai-weak-list').innerHTML = [
+          ...(data.weak_areas || []).map(i => `<li>${i}</li>`),
+          ...(data.warnings || []).map(w => `<li style="color: #f87171;">⚠️ ${w}</li>`)
+        ].join('') || '<li>No bottlenecks identified</li>';
+
+        document.getElementById('ai-recs-list').innerHTML = (data.recommendations || [])
+          .map(item => `<li>${item}</li>`).join('') || '<li>Maintain current workflow</li>';
+
+      } catch (err) {
+        console.error('Failed to load AI Insights:', err);
+      }
+    }
+
+    function renderCharts(data) {
+      const dates = (data.daily_trends || []).map(d => d.date);
+
+      // 1. Productivity Trend (Line)
+      renderChart('chart-productivity', 'line', {
+        labels: dates,
+        datasets: [{
+          label: 'Productivity Score',
+          data: data.daily_trends.map(d => d.productivity_score),
+          borderColor: '#818cf8',
+          backgroundColor: 'rgba(129, 140, 248, 0.15)',
+          fill: true,
+          tension: 0.3
+        }]
+      });
+
+      // 2. Task Status (Bar)
+      renderChart('chart-tasks', 'bar', {
+        labels: ['Completed', 'Pending', 'Overdue'],
+        datasets: [{
+          label: 'Tasks',
+          data: [data.task.completed, data.task.pending, data.task.overdue],
+          backgroundColor: ['#34d399', '#fbbf24', '#f87171']
+        }]
+      });
+
+      // 3. Email Category Distribution (Doughnut)
+      const catLabels = Object.keys(data.email.category_distribution || {});
+      const catVals = Object.values(data.email.category_distribution || {});
+      renderChart('chart-emails', 'doughnut', {
+        labels: catLabels.length ? catLabels : ['General'],
+        datasets: [{
+          data: catVals.length ? catVals : [data.email.total_processed || 1],
+          backgroundColor: ['#6366f1', '#38bdf8', '#c084fc', '#f43f5e', '#34d399']
+        }]
+      });
+
+      // 4. Meeting Activity (Bar)
+      renderChart('chart-meetings', 'bar', {
+        labels: dates,
+        datasets: [{
+          label: 'Meeting Minutes',
+          data: data.daily_trends.map(d => d.meeting_minutes),
+          backgroundColor: '#38bdf8'
+        }]
+      });
+
+
+      // 6. Career Activity (Bar)
+      renderChart('chart-career', 'bar', {
+        labels: Object.keys(data.career.application_status_distribution || {}).length ? Object.keys(data.career.application_status_distribution) : ['Applied'],
+        datasets: [{
+          label: 'Applications',
+          data: Object.values(data.career.application_status_distribution || {}).length ? Object.values(data.career.application_status_distribution) : [data.career.applications_submitted],
+          backgroundColor: '#f43f5e'
+        }]
+      });
+    }
+
+    function renderChart(canvasId, type, chartData) {
+      if (chartInstances[canvasId]) {
+        chartInstances[canvasId].destroy();
+      }
+
+      const ctx = document.getElementById(canvasId).getContext('2d');
+      chartInstances[canvasId] = new Chart(ctx, {
+        type: type,
+        data: chartData,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { labels: { color: '#94a3b8' } }
+          },
+          scales: type !== 'doughnut' ? {
+            x: { ticks: { color: '#64748b' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+            y: { ticks: { color: '#64748b' }, grid: { color: 'rgba(255,255,255,0.05)' }, beginAtZero: true }
+          } : {}
+        }
+      });
+    }
+
+    function openModal(modalId) {
+      document.getElementById(modalId).classList.add('active');
+    }
+
+    function closeModal(modalId) {
+      document.getElementById(modalId).classList.remove('active');
+    }
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      event.target.classList.add('active');
+
+      document.querySelectorAll('.tab-pane').forEach(p => p.style.display = 'none');
+      document.getElementById(tabId).style.display = 'block';
+    }
+
+    async function submitManualForm(e) {
+      e.preventDefault();
+      const payload = { user_id: 'user_1' };
+
+      const emProc = parseInt(document.getElementById('em-processed').value) || 0;
+      if (emProc > 0 || document.getElementById('em-category').value) {
+        payload.email = {
+          emails_processed: emProc,
+          email_category: document.getElementById('em-category').value || 'General',
+          opportunities_detected: parseInt(document.getElementById('em-opps').value) || 0
+        };
+      }
+
+      const mtDur = parseInt(document.getElementById('mt-duration').value) || 0;
+      if (mtDur > 0 || document.getElementById('mt-title').value) {
+        payload.meeting = {
+          meeting_title: document.getElementById('mt-title').value || 'Sync',
+          duration: mtDur,
+          attended_by: document.getElementById('mt-attended').value,
+          tasks_extracted: parseInt(document.getElementById('mt-tasks').value) || 0
+        };
+      }
+
+      const tkTitle = document.getElementById('tk-title').value;
+      if (tkTitle) {
+        payload.task = {
+          task_title: tkTitle,
+          status: document.getElementById('tk-status').value
+        };
+      }
+
+      const lrAct = document.getElementById('lr-activity').value;
+      if (lrAct || document.getElementById('lr-skill').value) {
+        payload.learning = {
+          activity: lrAct || 'Resource',
+          skill: document.getElementById('lr-skill').value || 'General',
+          completion_status: 'completed'
+        };
+      }
+
+
+      const crApp = document.getElementById('cr-app').value;
+      if (crApp) {
+        payload.career = {
+          application: crApp,
+          application_status: document.getElementById('cr-status').value,
+          ats_score: parseFloat(document.getElementById('cr-ats').value) || null,
+          skills_gained: document.getElementById('cr-skills').value,
+          career_activity: 'Job Application'
+        };
+      }
+
+      try {
+        const res = await fetch('/api/events/manual', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (res.ok) {
+          closeModal('data-modal');
+          document.getElementById('manual-form').reset();
+          loadDashboard();
+        } else {
+          alert('Failed to save manual analytics data.');
+        }
+      } catch (err) {
+        console.error('Error submitting form:', err);
+      }
+    }
+
+    async function triggerReport(reportType) {
+      document.getElementById('pdf-download-btn').style.display = 'none';
+      document.getElementById('report-modal-title').innerText = `${reportType.toUpperCase()} PRODUCTIVITY REPORT`;
+      document.getElementById('report-modal-content').innerHTML = `<div style="text-align: center; padding: 2.5rem; color: var(--text-muted);">Generating formal PDF report with AI analysis...</div>`;
+      openModal('report-modal');
+
+      try {
+        const res = await fetch(`/api/reports/generate?user_id=user_1&report_type=${reportType}`, { method: 'POST' });
+        const data = await res.json();
+        currentReportData = data;
+
+        const m = data.metrics || {};
+        const score = m.productivity_score || 0;
+
+        document.getElementById('pdf-download-btn').style.display = 'inline-flex';
+        lucide.createIcons();
+
+        document.getElementById('report-modal-content').innerHTML = `
+          <div id="printable-pdf-report" style="background: #0f172a; color: #f8fafc; padding: 2rem; border-radius: 12px; font-family: 'Inter', sans-serif; border: 1px solid rgba(255,255,255,0.1);">
+            
+            <!-- Report Banner Header -->
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #6366f1; padding-bottom: 1rem; margin-bottom: 1.5rem;">
+              <div>
+                <h1 style="font-family: 'Outfit', sans-serif; font-size: 1.6rem; color: #ffffff; margin-bottom: 0.2rem;">AGENTOS PRODUCTIVITY REPORT</h1>
+                <div style="font-size: 0.85rem; color: #94a3b8;">User: <strong>user_1</strong> | Type: <strong>${data.report_type.toUpperCase()}</strong></div>
+              </div>
+              <div style="text-align: right;">
+                <div style="font-size: 0.8rem; color: #64748b;">Period Range:</div>
+                <div style="font-size: 0.88rem; font-weight: 600; color: #818cf8;">${data.start_date} to ${data.end_date}</div>
+              </div>
+            </div>
+
+            <!-- Score Summary Cards -->
+            <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 1rem; margin-bottom: 1.5rem;">
+              <div style="background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: 10px; padding: 1rem; text-align: center;">
+                <div style="font-size: 0.75rem; text-transform: uppercase; color: #a5b4fc; font-weight: 700;">Productivity Score</div>
+                <div style="font-size: 2.5rem; font-weight: 800; color: #818cf8; margin: 0.3rem 0;">${score}/100</div>
+                <div style="font-size: 0.75rem; color: #94a3b8;">Algorithm Evaluated</div>
+              </div>
+              <div style="background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 1rem;">
+                <div style="font-size: 0.75rem; text-transform: uppercase; color: #94a3b8; font-weight: 700; margin-bottom: 0.4rem;">Executive Metrics Summary</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.82rem; color: #cbd5e1;">
+                  <div>• Tasks Completed: <strong>${m.task?.completed || 0} / ${m.task?.total || 0}</strong></div>
+                  <div>• Meetings: <strong>${m.meeting?.total_meetings || 0} (${m.meeting?.total_duration_minutes || 0}m)</strong></div>
+                  <div>• Email Opportunities: <strong>${m.email?.opportunities_detected || 0}</strong></div>
+                  <div>• Learning Activities: <strong>${m.learning?.activities_completed || 0}</strong></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- AI Summary Text Box -->
+            <div style="background: rgba(15, 23, 42, 0.9); border-left: 4px solid #818cf8; padding: 1rem; border-radius: 6px; margin-bottom: 1.5rem;">
+              <div style="font-size: 0.8rem; font-weight: 700; color: #a5b4fc; text-transform: uppercase; margin-bottom: 0.4rem;">AI Executive Evaluation</div>
+              <div style="font-size: 0.88rem; color: #e2e8f0; line-height: 1.5; white-space: pre-wrap;">${data.ai_summary}</div>
+            </div>
+
+            <!-- Detailed Breakdown Table -->
+            <div style="margin-top: 1rem;">
+              <h3 style="font-size: 0.95rem; color: #f8fafc; margin-bottom: 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.4rem;">Pillar Performance Breakdown</h3>
+              <table style="width: 100%; border-collapse: collapse; font-size: 0.82rem; color: #cbd5e1;">
+                <thead>
+                  <tr style="background: rgba(30, 41, 59, 0.9); text-align: left; color: #94a3b8;">
+                    <th style="padding: 0.6rem; border: 1px solid rgba(255,255,255,0.08);">Pillar Category</th>
+                    <th style="padding: 0.6rem; border: 1px solid rgba(255,255,255,0.08);">Key Value Logged</th>
+                    <th style="padding: 0.6rem; border: 1px solid rgba(255,255,255,0.08);">Status & Details</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td style="padding: 0.6rem; border: 1px solid rgba(255,255,255,0.08); font-weight: 600;">Tasks</td>
+                    <td style="padding: 0.6rem; border: 1px solid rgba(255,255,255,0.08);">${m.task?.completed || 0} Done</td>
+                    <td style="padding: 0.6rem; border: 1px solid rgba(255,255,255,0.08);">${m.task?.overdue || 0} Overdue, ${m.task?.completion_rate || 0}% Rate</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 0.6rem; border: 1px solid rgba(255,255,255,0.08); font-weight: 600;">Meetings</td>
+                    <td style="padding: 0.6rem; border: 1px solid rgba(255,255,255,0.08);">${m.meeting?.total_meetings || 0} Sessions</td>
+                    <td style="padding: 0.6rem; border: 1px solid rgba(255,255,255,0.08);">${m.meeting?.total_duration_minutes || 0} mins, ${m.meeting?.tasks_extracted || 0} tasks extracted</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 0.6rem; border: 1px solid rgba(255,255,255,0.08); font-weight: 600;">Emails</td>
+                    <td style="padding: 0.6rem; border: 1px solid rgba(255,255,255,0.08);">${m.email?.total_processed || 0} Processed</td>
+                    <td style="padding: 0.6rem; border: 1px solid rgba(255,255,255,0.08);">${m.email?.opportunities_detected || 0} Opportunities Detected</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 0.6rem; border: 1px solid rgba(255,255,255,0.08); font-weight: 600;">Learning</td>
+                    <td style="padding: 0.6rem; border: 1px solid rgba(255,255,255,0.08);">${m.learning?.activities_completed || 0} Activities</td>
+                    <td style="padding: 0.6rem; border: 1px solid rgba(255,255,255,0.08);">${(m.learning?.skills_worked_on || []).join(', ') || 'General'}</td>
+                  </tr>
+
+                  <tr>
+                    <td style="padding: 0.6rem; border: 1px solid rgba(255,255,255,0.08); font-weight: 600;">Career</td>
+                    <td style="padding: 0.6rem; border: 1px solid rgba(255,255,255,0.08);">${m.career?.applications_submitted || 0} Applied</td>
+                    <td style="padding: 0.6rem; border: 1px solid rgba(255,255,255,0.08);">${m.career?.career_activity_count || 0} Activities logged</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Footer Stamp -->
+            <div style="margin-top: 1.5rem; text-align: center; font-size: 0.72rem; color: #64748b; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.75rem;">
+              Generated automatically by AgentOS Analytics Agent Engine • ${new Date().toLocaleString()}
+            </div>
+          </div>
+        `;
+      } catch (err) {
+        document.getElementById('report-modal-content').innerHTML = `<div style="color: #f87171; text-align: center; padding: 2rem;">Failed to generate report. Make sure server is running.</div>`;
+      }
+    }
+
+    function downloadPDFReport() {
+      const element = document.getElementById('printable-pdf-report');
+      if (!element) return;
+
+      const opt = {
+        margin:       [0.4, 0.4, 0.4, 0.4],
+        filename:     `AgentOS_Analytics_Report_${currentReportData?.report_type || 'productivity'}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#0f172a' },
+        jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+      };
+
+      html2pdf().set(opt).from(element).save();
+    }
+  </script>
+</body>
+</html>
+

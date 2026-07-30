@@ -1,0 +1,23 @@
+
+    Jane Smith
+    Data Scientist & Machine Learning Engineer
+    Email: jane.smith@example.com
+    Phone: 123-456-7890
+    Location: New York, NY
+    LinkedIn: https://linkedin.com/in/janesmith
+    GitHub: https://github.com/janesmith
+
+    Summary:
+    Experienced Data Scientist with 5+ years of experience in building machine learning models and data pipelines.
+
+    Experience:
+    Senior Data Scientist at AI Solutions Inc (2021 - Present)
+    - Developed NLP models using Python, PyTorch, and Transformers.
+    - Optimized database queries in PostgreSQL.
+
+    Education:
+    Master of Science in Data Science, Columbia University (2019 - 2021)
+
+    Skills:
+    Python, PyTorch, SQL, Machine Learning, Data Science, FastAPI
+    

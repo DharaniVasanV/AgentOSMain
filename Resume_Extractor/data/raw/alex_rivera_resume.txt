@@ -1,0 +1,22 @@
+
+    Alex Rivera
+    Senior Full Stack Engineer
+    Email: alex.rivera@example.com
+    Phone: (555) 987-6543
+    Location: Austin, TX
+    GitHub: https://github.com/arivera
+
+    Summary:
+    Passionate software engineer with 6 years experience in Python, FastAPI, React, and cloud architectures.
+
+    Experience:
+    Lead Software Engineer at Tech Matrix (2022 - Present)
+    - Engineered high-throughput microservices using FastAPI and Groq API integrations.
+    - Designed scalable PostgreSQL schemas.
+
+    Education:
+    BS in Computer Engineering, UT Austin (2014 - 2018)
+
+    Skills:
+    Python, FastAPI, Groq API, PostgreSQL, Docker, React, TypeScript
+    

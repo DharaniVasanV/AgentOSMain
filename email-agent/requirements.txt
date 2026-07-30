@@ -1,9 +1,0 @@
-fastapi
-uvicorn
-pytest
-google-api-python-client
-google-auth
-requests
-sqlalchemy
-google-generativeai
-psycopg2-binary

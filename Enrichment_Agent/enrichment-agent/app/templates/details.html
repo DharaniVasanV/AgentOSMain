@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Opportunity Full Details | Enrichment Agent</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <style>
+    .details-container {
+      max-width: 1100px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+    }
+    .back-nav {
+      margin-bottom: 1.5rem;
+      display: inline-block;
+    }
+    .details-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+    @media (max-width: 768px) {
+      .details-grid { grid-template-columns: 1fr; }
+    }
+    .section-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 1.5rem;
+      backdrop-filter: blur(12px);
+      margin-bottom: 1.5rem;
+    }
+    .section-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 0.75rem;
+    }
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.6rem 0;
+      border-bottom: 1px dashed rgba(255,255,255,0.06);
+    }
+    .info-label {
+      color: var(--text-muted);
+      font-size: 0.88rem;
+    }
+    .info-val {
+      color: var(--text-primary);
+      font-weight: 600;
+      font-size: 0.88rem;
+      text-align: right;
+    }
+    .source-tag {
+      font-size: 0.75rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      background: rgba(99, 102, 241, 0.15);
+      color: #818cf8;
+      border: 1px solid rgba(99, 102, 241, 0.3);
+    }
+  </style>
+</head>
+<body>
+
+<div class="details-container">
+  <div class="back-nav">
+    <a href="/" class="btn btn-secondary">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+      Back to Dashboard
+    </a>
+  </div>
+
+  <div class="section-card">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+      <div>
+        <span class="badge badge-indigo" id="det-category">Category</span>
+        <h1 id="det-title" style="font-size: 1.75rem; margin: 0.5rem 0; font-weight: 800;">Loading Title...</h1>
+        <p id="det-desc" style="color: var(--text-muted); font-size: 0.95rem; margin: 0;"></p>
+      </div>
+      <span class="badge badge-amber" id="det-priority">HIGH Priority</span>
+    </div>
+  </div>
+
+  <div class="details-grid">
+    <!-- Left Column -->
+    <div>
+      <!-- Core Information -->
+      <div class="section-card">
+        <div class="section-title"><span>📌</span> Core Opportunity Details</div>
+        <div id="grid-core-info"></div>
+      </div>
+
+      <!-- Registration & Eligibility -->
+      <div class="section-card">
+        <div class="section-title"><span>📝</span> Registration & Eligibility</div>
+        <div id="grid-reg-info"></div>
+      </div>
+    </div>
+
+    <!-- Right Column -->
+    <div>
+      <!-- Additional Discovered Info -->
+      <div class="section-card">
+        <div class="section-title"><span>✨</span> Dynamic Discovered Information</div>
+        <div id="grid-extra-info"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Source Verification Table -->
+  <div class="section-card">
+    <div class="section-title"><span>🛡️</span> Verified Sources & Confidence Scores</div>
+    <table class="docs-table">
+      <thead>
+        <tr>
+          <th>Field Name</th>
+          <th>Source Type</th>
+          <th>Source URL</th>
+          <th>Confidence</th>
+        </tr>
+      </thead>
+      <tbody id="table-sources-body">
+        <!-- Rendered via JS -->
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  const recordId = new URLSearchParams(window.location.search).get('id') || '1';
+
+  async function loadDetails() {
+    try {
+      const res = await fetch(`/api/records/${recordId}`);
+      if (!res.ok) throw new Error('Record not found');
+      const data = await res.json();
+      
+      document.getElementById('det-category').innerText = (data.category || 'opportunity').toUpperCase();
+      document.getElementById('det-title').innerText = data.title || 'Record Details';
+      document.getElementById('det-desc').innerText = data.description || '';
+      document.getElementById('det-priority').innerText = (data.priority || 'MEDIUM') + ' Priority';
+
+      const enriched = data.enriched_data || {};
+      
+      // Render Core Info
+      let coreHtml = '';
+      ['organizer', 'theme', 'role', 'company', 'provider', 'cost', 'mode', 'stipend'].forEach(f => {
+        if (enriched[f]) {
+          const val = typeof enriched[f] === 'object' ? enriched[f].value : enriched[f];
+          coreHtml += `<div class="info-row"><span class="info-label">${f.replace('_',' ').toUpperCase()}</span><span class="info-val">${val}</span></div>`;
+        }
+      });
+      document.getElementById('grid-core-info').innerHTML = coreHtml || '<p style="color:var(--text-muted)">No core info available</p>';
+
+      // Render Registration Info
+      let regHtml = '';
+      ['registration_deadline', 'eligibility', 'team_size', 'registration_fee', 'duration', 'application_deadline'].forEach(f => {
+        if (enriched[f]) {
+          const val = typeof enriched[f] === 'object' ? enriched[f].value : enriched[f];
+          regHtml += `<div class="info-row"><span class="info-label">${f.replace('_',' ').toUpperCase()}</span><span class="info-val">${val}</span></div>`;
+        }
+      });
+      document.getElementById('grid-reg-info').innerHTML = regHtml || '<p style="color:var(--text-muted)">No registration details found</p>';
+
+      // Render Additional Info
+      const searched = data.searched_details || {};
+      let extraHtml = '';
+      Object.keys(searched).forEach(k => {
+        const val = typeof searched[k] === 'object' ? (searched[k].value || JSON.stringify(searched[k])) : searched[k];
+        extraHtml += `<div class="info-row"><span class="info-label">${k.replace('_',' ').toUpperCase()}</span><span class="info-val">${val}</span></div>`;
+      });
+      document.getElementById('grid-extra-info').innerHTML = extraHtml || '<p style="color:var(--text-muted)">No additional details</p>';
+
+      // Render Documents
+      const docs = data.documents || [];
+      let docsHtml = '';
+      docs.forEach(d => {
+        docsHtml += `<div class="info-row"><span class="info-label">${d.document_name} (${d.document_type})</span><a class="info-val" href="${d.document_url}" target="_blank">Download / Open ↗</a></div>`;
+      });
+      document.getElementById('grid-docs-info').innerHTML = docsHtml || '<p style="color:var(--text-muted)">No documents discovered yet</p>';
+
+      // Render Sources Table
+      const sources = data.sources || [];
+      let sourcesHtml = '';
+      sources.forEach(s => {
+        const confPercent = Math.round((s.confidence || 0.9) * 100);
+        sourcesHtml += `<tr>
+          <td><strong>${s.field_name}</strong></td>
+          <td><span class="source-tag">${s.source_type}</span></td>
+          <td><a href="${s.source_url}" target="_blank" style="color:var(--indigo-light); font-size:0.85rem;">${s.source_url}</a></td>
+          <td><strong style="color:var(--emerald);">${confPercent}%</strong></td>
+        </tr>`;
+      });
+      document.getElementById('table-sources-body').innerHTML = sourcesHtml || '<tr><td colspan="4" style="text-align:center; color:var(--text-muted)">No source verification logs available</td></tr>';
+
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  window.addEventListener('DOMContentLoaded', loadDetails);
+</script>
+</body>
+</html>

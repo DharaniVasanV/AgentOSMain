@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Filler Agent - AI Form Automation{% endblock %}</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Local Bootstrap 5 CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', path='css/bootstrap.min.css') }}">
+    <!-- Font Awesome Icons (local) -->
+    <link rel="stylesheet" href="{{ url_for('static', path='css/all.min.css') }}">
+    <!-- Custom Glassmorphism CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}">
+
+
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-glass sticky-top">
+        <div class="container-fluid px-4">
+            <a class="brand-logo" href="/">
+                <div class="brand-icon">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                </div>
+                <span>Filler <span class="text-gradient">Agent</span></span>
+            </a>
+            
+            <button class="navbar-toggler border-0 text-light" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <i class="fa-solid fa-bars fs-4"></i>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center gap-3 mt-3 mt-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link text-light font-weight-500" href="/"><i class="fa-solid fa-house me-1 opacity-75"></i> Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-light font-weight-500" href="/dashboard"><i class="fa-solid fa-gauge me-1 opacity-75"></i> Dashboard</a>
+                    </li>
+                    <li class="nav-item ms-lg-2">
+                        <a href="/dashboard" class="btn-glow py-2 px-3 fs-7">
+                            <i class="fa-solid fa-bolt"></i> Start Filling
+                        </a>
+                    </li>
+                    <li class="nav-item ms-lg-2">
+                        {% if request.session.get('user') %}
+                            <div class="d-flex align-items-center gap-2">
+                                {% if request.session['user'].get('picture') %}
+                                    <img src="{{ request.session['user']['picture'] }}" width="32" height="32" class="rounded-circle" alt="avatar">
+                                {% endif %}
+                                <span class="text-light fs-7">{{ request.session['user'].get('name', '') }}</span>
+                                <a href="/logout" class="btn-glass-secondary py-1 px-3 fs-7">Logout</a>
+                            </div>
+                        {% else %}
+                            <a href="/login" class="btn-glass-secondary py-2 px-3 fs-7">
+                                <i class="fa-brands fa-google me-1"></i> Sign in with Google
+                            </a>
+                        {% endif %}
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Page Content -->
+    <main class="py-4">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Toast Notifications Container -->
+    <div id="toastContainer" class="toast-container-custom"></div>
+
+    <!-- Local Bootstrap 5 JS Bundle -->
+    <script src="{{ url_for('static', path='js/bootstrap.bundle.min.js') }}"></script>
+
+    <script src="{{ url_for('static', path='js/main.js') }}"></script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

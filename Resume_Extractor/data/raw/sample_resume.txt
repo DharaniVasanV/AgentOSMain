@@ -1,0 +1,18 @@
+Alex Rivera
+Software Engineer
+Email: alex.rivera@example.com
+Phone: +1 (555) 123-4567
+Location: San Francisco, CA
+
+SUMMARY
+Passionate Full-Stack Engineer with 5+ years of experience building scalable web applications.
+
+SKILLS
+Python, FastAPI, React, PostgreSQL, Docker, AWS
+
+EXPERIENCE
+Senior Software Engineer at TechCorp (2021 - Present)
+- Developed high-throughput REST APIs using FastAPI and PostgreSQL.
+
+EDUCATION
+B.S. in Computer Science - UC Berkeley (2017 - 2021)

@@ -1,0 +1,12 @@
+{
+  "name": "John Doe",
+  " occupation": "Python developer",
+  "email": "john@example.com",
+  "workExperience": [
+    {
+      "company": "ABC Corp",
+      "startDate": "2020",
+      "endDate": "2023"
+    }
+  ]
+}
